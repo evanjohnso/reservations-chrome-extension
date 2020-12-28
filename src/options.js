@@ -6,42 +6,61 @@ headers.append("cookie", document.cookie);
 
 document.getElementById("save").addEventListener("click", requestAvailability);
 
-// document.getElementById("enableNotifications").addEventListener("click", () => {
-//   handleEnableNotificationButton("www.google.com");
-// });
+chrome.runtime.onMessage.addListener((data) => {
+  if (data.type === "notificationClicked") {
+    // this opens up a new page in the context of the extension
+    // window.open(
+    //   "_blank",
+    //   "https://account.ikonpass.com/en/myaccount/add-reservations/"
+    // );
+  }
+});
 
 function requestAvailability() {
   fetch(url, { headers })
     .then((res) => {
       if (res.ok) return res.json();
-      errorNotification("Make sure you are logged in");
+      else {
+        errorNotification(
+          "Make sure you are logged in to account.ikonpass.com"
+        );
+      }
     })
-    .then((data) => {
-      data = data["data"];
-      reservationNotification(data[0]["id"], "PicklesLink");
-    });
+    .then(parseResponse);
 }
+
+function parseResponse(rawData) {
+  var data = rawData["data"];
+  var theOneWeWant = data.indexOf((d) =>
+    d["blackout_dates"].some((date) => date.includes("2021-"))
+  );
+  reservationNotification(theOneWeWant);
+}
+
+const _commonNotificationOptions = {
+  iconUrl: "icons/robot.png",
+  type: "basic",
+  isClickable: true,
+};
+
 function errorNotification(message) {
   chrome.runtime.sendMessage("", {
     type: "notification",
     options: {
       title: "Something isn't right",
-      message,
-      iconUrl: "icons/robot.png",
-      type: "basic",
+      message: message.toString(),
+      ..._commonNotificationOptions,
     },
   });
 }
 
-function reservationNotification(day, makeReservationLink) {
+function reservationNotification(day) {
   chrome.runtime.sendMessage("", {
     type: "notification",
     options: {
       title: `Parking is available for ${day}!!!`,
       message: "Quick, click here to make the reservation!",
-      iconUrl: "icons/robot.png",
-      type: "basic",
+      ..._commonNotificationOptions,
     },
-    makeReservationLink,
   });
 }
