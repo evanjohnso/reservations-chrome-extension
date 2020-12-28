@@ -1,0 +1,23 @@
+{
+  "name": "Reservations Extension",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "This extension gives us the make icon pass reservations",
+  "homepage_url": "http://github.com",
+  "permissions": ["storage", "webRequest", "<all_urls>"],
+  "browser_action": {
+    "default_title": "Reservations Extension",
+    "default_popup": "src/pageAction.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["src/inject.css"]
+    },
+    {
+      "run_at": "document_start",
+      "matches": ["<all_urls>"],
+      "js": ["js/jquery-3.2.1.min.js", "src/inject.js"]
+    }
+  ]
+}
